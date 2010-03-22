@@ -79,15 +79,7 @@ namespace DXTest {
     if (SUCCEEDED(this->Direct3DDevice->BeginScene())) {
       {
         {
-          /*D3DXMATRIXA16 matWorld;
-          UINT iTime = timeGetTime() % 1000;
-          float fAngle = iTime * (2.0f * D3DX_PI) / 1000.0f;
-          D3DXMatrixRotationY(&matWorld, fAngle);
-          D3DXMatrixIdentity(&matWorld);
-          this->Direct3DDevice->SetTransform(D3DTS_WORLD, &matWorld);*/
-        }
-        {
-          D3DXVECTOR3 vEvePt(0.0f, 0.0f, 0.0f);
+          D3DXVECTOR3 vEvePt(0.0f, 0.0f, (float)(1.0 - sqrt(3.0)));
           D3DXVECTOR3 vLookatPt(0.0f, 0.0f, 1.0f);
           D3DXVECTOR3 vUpVec(0.0f, 1.0f, 0.0f);
           D3DXMATRIXA16 matView;
@@ -99,15 +91,8 @@ namespace DXTest {
         }
         {
           D3DXMATRIXA16 matProj;
-          D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 3, 0.75f, 0.0f, 1000.0f);
+          D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 3, 640.0f / 480.0f, 1.0f, 1000.0f);
           this->Direct3DDevice->SetTransform(D3DTS_PROJECTION, &matProj);
-        }
-        {
-          /*D3DVIEWPORT9 viewport;
-          viewport.X = 0;
-          viewport.Y = 0;
-          viewport.Width = 640;
-          viewport.Height = 480;*/
         }
       }
       this->Direct3DDevice->SetStreamSource(0, this->Direct3DVertexBuffer, 0, sizeof(CustomVertex));
