@@ -7,14 +7,16 @@ namespace DXTest {
   struct CustomVertex {
     float x, y, z;
     DWORD color;
+    float tu, tv;
   };
 
-  static const int D3DFVF_CUSTOMVERTEX = D3DFVF_XYZ | D3DFVF_DIFFUSE;
+  static const int D3DFVF_CUSTOMVERTEX = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
 
   Device::Device(HWND hWnd)
     : Direct3D(0),
       Direct3DDevice(0),
-      Direct3DVertexBuffer(0) {
+      Direct3DVertexBuffer(0),
+      Direct3DTexture(0) {
     try {
       if (!(this->Direct3D = Direct3DCreate9(D3D_SDK_VERSION))) {
         throw std::exception();
@@ -34,7 +36,7 @@ namespace DXTest {
       }
       this->Direct3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
       this->Direct3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
-      if (FAILED(this->Direct3DDevice->CreateVertexBuffer(3 * sizeof(CustomVertex),
+      if (FAILED(this->Direct3DDevice->CreateVertexBuffer(4 * sizeof(CustomVertex),
                                                           0,
                                                           D3DFVF_CUSTOMVERTEX,
                                                           D3DPOOL_DEFAULT,
@@ -43,9 +45,10 @@ namespace DXTest {
         throw std::exception();
       }
       CustomVertex Vertices[] = {
-        {  0.0f,  1.0f, 1.0f, 0xffff0000, },
-        { -1.0f, -1.0f, 1.0f, 0xff00ff00, },
-        {  1.0f, -1.0f, 1.0f, 0xff0000ff, },
+        { -1.0f,  1.0f, 0.0f, 0xffffffff, 0, 0, },
+        {  1.0f,  1.0f, 0.0f, 0xffffffff, 1, 0, },
+        { -1.0f, -1.0f, 0.0f, 0xffffffff, 0, 1, },
+        {  1.0f, -1.0f, 0.0f, 0xffffffff, 1, 1, },
       };
       void* pVertices;
       if (FAILED(this->Direct3DVertexBuffer->Lock(0, sizeof(Vertices), (void**)&pVertices, 0))) {
@@ -53,6 +56,13 @@ namespace DXTest {
       }
       memcpy(pVertices, Vertices, sizeof(Vertices));
       this->Direct3DVertexBuffer->Unlock();
+
+      if (FAILED(D3DXCreateTextureFromFile(this->Direct3DDevice,
+                                           _T("sobabouro.jpg"),
+                                           &this->Direct3DTexture))) {
+        throw std::exception();
+      }
+
     } catch (...) {
       this->~Device();
       throw;
@@ -60,6 +70,10 @@ namespace DXTest {
   }
 
   Device::~Device() throw() {
+    if (this->Direct3DTexture) {
+      this->Direct3DTexture->Release();
+      this->Direct3DTexture = 0;
+    }
     if (this->Direct3DVertexBuffer) {
       this->Direct3DVertexBuffer->Release();
       this->Direct3DVertexBuffer = 0;
@@ -78,26 +92,30 @@ namespace DXTest {
     this->Direct3DDevice->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
     if (SUCCEEDED(this->Direct3DDevice->BeginScene())) {
       {
-        {
-          D3DXVECTOR3 vEvePt(0.0f, 0.0f, (float)(1.0 - sqrt(3.0)));
-          D3DXVECTOR3 vLookatPt(0.0f, 0.0f, 1.0f);
-          D3DXVECTOR3 vUpVec(0.0f, 1.0f, 0.0f);
-          D3DXMATRIXA16 matView;
-          D3DXMatrixLookAtLH(&matView,
-                             &vEvePt,
-                             &vLookatPt,
-                             &vUpVec);
-          this->Direct3DDevice->SetTransform(D3DTS_VIEW, &matView);
-        }
-        {
-          D3DXMATRIXA16 matProj;
-          D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 3, 640.0f / 480.0f, 1.0f, 1000.0f);
-          this->Direct3DDevice->SetTransform(D3DTS_PROJECTION, &matProj);
-        }
+        D3DXVECTOR3 vEvePt(0.0f, 0.0f, (float)(-sqrt(3.0)));
+        D3DXVECTOR3 vLookatPt(0.0f, 0.0f, 1.0f);
+        D3DXVECTOR3 vUpVec(0.0f, 1.0f, 0.0f);
+        D3DXMATRIXA16 matView;
+        D3DXMatrixLookAtLH(&matView,
+                           &vEvePt,
+                           &vLookatPt,
+                           &vUpVec);
+        this->Direct3DDevice->SetTransform(D3DTS_VIEW, &matView);
       }
+      {
+        D3DXMATRIXA16 matProj;
+        D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 3, 640.0f / 480.0f, 1.0f, 1000.0f);
+        this->Direct3DDevice->SetTransform(D3DTS_PROJECTION, &matProj);
+      }
+      {
+        D3DXMATRIXA16 matWorld;
+        D3DXMatrixRotationY(&matWorld, D3DX_PI / 4);
+        this->Direct3DDevice->SetTransform(D3DTS_WORLD, &matWorld);
+      }
+      this->Direct3DDevice->SetTexture(0, this->Direct3DTexture);
       this->Direct3DDevice->SetStreamSource(0, this->Direct3DVertexBuffer, 0, sizeof(CustomVertex));
       this->Direct3DDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
-      this->Direct3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 1);
+      this->Direct3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
       this->Direct3DDevice->EndScene();
     }
     this->Direct3DDevice->Present(0, 0, 0, 0);

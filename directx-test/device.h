@@ -17,6 +17,7 @@ namespace DXTest {
     IDirect3D9* Direct3D;
     IDirect3DDevice9* Direct3DDevice;
     IDirect3DVertexBuffer9* Direct3DVertexBuffer;
+    IDirect3DTexture9* Direct3DTexture;
   };
 
 }

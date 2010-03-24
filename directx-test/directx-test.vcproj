@@ -60,6 +60,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="d3d9.lib d3dx9.lib winmm.lib"
 				GenerateDebugInformation="true"
+				SubSystem="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -168,6 +169,10 @@
 		</File>
 		<File
 			RelativePath=".\main.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\sobabouro.jpg"
 			>
 		</File>
 	</Files>
